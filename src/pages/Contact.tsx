@@ -27,7 +27,7 @@ const Contact = () => {
         try {
             await emailjs.send(
                 'service_kcea209',
-                '__ejs-test-mail-service__',
+                'template_63wcufn',
                 {
                     from_name: formData.name,
                     reply_to: formData.email,
