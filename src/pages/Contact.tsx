@@ -26,15 +26,15 @@ const Contact = () => {
 
         try {
             await emailjs.send(
-                'YOUR_SERVICE_ID',
-                'YOUR_TEMPLATE_ID',
+                'service_kcea209',
+                '__ejs-test-mail-service__',
                 {
                     from_name: formData.name,
                     reply_to: formData.email,
                     subject: formData.subject,
                     message: formData.message,
                 },
-                'YOUR_PUBLIC_KEY'
+                'D8nFiIKX52OBvtDXI'
             );
 
             setSubmitted(true);
