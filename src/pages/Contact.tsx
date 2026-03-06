@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { Mail, MapPin, Phone, Send } from 'lucide-react';
-import emailjs from '@emailjs/browser';
 
 const Contact = () => {
     const [formData, setFormData] = useState({
@@ -25,23 +24,25 @@ const Contact = () => {
         setIsSubmitting(true);
 
         try {
-            await emailjs.send(
-                'service_kcea209',
-                'template_63wcufn',
-                {
-                    from_name: formData.name,
-                    reply_to: formData.email,
-                    subject: formData.subject,
-                    message: formData.message,
+            const response = await fetch('/api/contact', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
                 },
-                'D8nFiIKX52OBvtDXI'
-            );
+                body: JSON.stringify(formData)
+            });
 
-            setSubmitted(true);
-            setFormData({ name: '', email: '', subject: '', message: '' });
+            if (response.ok) {
+                setSubmitted(true);
+                setFormData({ name: '', email: '', subject: '', message: '' });
+            } else {
+                const errorData = await response.json().catch(() => ({}));
+                console.error('Failed to send message:', errorData);
+                alert(errorData.error || 'Failed to send message. Please try again.');
+            }
         } catch (error) {
             console.error('Error:', error);
-            alert('An error occurred while sending the message. Please try again later.');
+            alert('An error occurred while connecting to the server. Please try again later.');
         } finally {
             setIsSubmitting(false);
         }

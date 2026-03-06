@@ -12,15 +12,6 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// Transporter configuration for Gmail
-const transporter = nodemailer.createTransport({
-    service: 'gmail',
-    auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS
-    }
-});
-
 app.post('/api/contact', async (req, res) => {
     const { name, email, subject, message } = req.body;
 
@@ -29,20 +20,34 @@ app.post('/api/contact', async (req, res) => {
     }
 
     try {
-        const mailOptions = {
-            from: process.env.EMAIL_USER, // The authenticated Gmail account
-            to: process.env.EMAIL_USER, // Send it to the same account (skjnconstructionltd@gmail.com)
-            replyTo: email, // Allow replying directly to the customer
-            subject: `Website Inquiry: ${subject || 'No Subject'}`,
-            text: `You have received a new inquiry from the SKJN Construction Website.\n\nCustomer Details:\n------------------\nName: ${name}\nEmail: ${email}\nSubject: ${subject || 'No Subject'}\n\nMessage:\n------------------\n${message}`
-        };
+        const emailjsResponse = await fetch('https://api.emailjs.com/api/v1.0/email/send', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                service_id: 'service_kcea209',
+                template_id: 'template_63wcufn',
+                user_id: 'D8nFiIKX52OBvtDXI',
+                template_params: {
+                    from_name: name,
+                    reply_to: email,
+                    subject: subject || 'No Subject',
+                    message: message,
+                }
+            })
+        });
 
-        await transporter.sendMail(mailOptions);
-
-        res.status(200).json({ success: true, message: 'Message sent successfully!' });
+        if (emailjsResponse.ok) {
+            res.status(200).json({ success: true, message: 'Message sent successfully!' });
+        } else {
+            const errorText = await emailjsResponse.text();
+            console.error('EmailJS Error:', errorText);
+            res.status(500).json({ error: 'Failed to send the message. Server responded: ' + errorText });
+        }
     } catch (error) {
-        console.error('Error sending email:', error);
-        res.status(500).json({ error: 'Failed to send the message. Please try again later.' });
+        console.error('Network Error connecting to EmailJS:', error);
+        res.status(500).json({ error: 'Failed to connect to email provider.' });
     }
 });
 
